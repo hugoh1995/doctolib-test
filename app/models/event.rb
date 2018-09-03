@@ -17,8 +17,8 @@ class Event < ApplicationRecord
       appointments = events.select {|e| day.wday == e.starts_at.wday && e.kind == "appointment" }
       unavailable_slots = self.get_slots(appointments)
 
-      # 4.remove unavailable slots from available slots
-      slots = (available_slots - unavailable_slots).uniq
+      # 4.remove unavailable slots from available slots and sort them by time
+      slots = (available_slots - unavailable_slots).uniq.sort_by {|time| time.to_time }
 
       # 5.add element to array in the right format
       availabilities << { date:  day, slots: slots.map{|e| e[0] == "0" ? e[1, e.length] : e } }
@@ -30,9 +30,9 @@ class Event < ApplicationRecord
 
   private
 
-  def self.get_slots(data)
+  def self.get_slots(events)
     slots = []
-    data.each do |event|
+    events.each do |event|
       time = event.starts_at
       (((event.ends_at.to_i - event.starts_at.to_i)/60)/30).times do
         slots << time.strftime('%H:%M')
